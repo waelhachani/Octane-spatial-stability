@@ -14,8 +14,7 @@ public class SpatialReaderLocation {
            String hostname = "192.168.2.229";
 
            if (hostname == null) {
-                throw new Exception("Must specify the '"
-                        + SampleProperties.hostname + "' property");
+             throw new Exception("Must specify the '" + SampleProperties.hostname + "' property");
             }
 
           ImpinjReader reader = new ImpinjReader();
