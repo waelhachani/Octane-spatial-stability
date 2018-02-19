@@ -11,7 +11,7 @@ public class SpatialReaderLocation {
     public static void main(String[] args) {
         try {
            // String hostname = System.getProperty(SampleProperties.hostname);
-            String hostname = "192.168.2.229";
+           String hostname = "192.168.2.229";
 
            if (hostname == null) {
                 throw new Exception("Must specify the '"
