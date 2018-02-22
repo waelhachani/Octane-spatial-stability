@@ -35,7 +35,7 @@ public class SpatialReaderLocation {
       PlacementConfig pc = settings.getSpatialConfig().getPlacement();
 
       // The mounting height of the spatial reader, in centimeters
-      pc.setHeightCm((short) 457);
+      pc.setHeightCm((short) 250);
 
       // These settings aren't required in a single spatial reader
       // environment
@@ -46,12 +46,12 @@ public class SpatialReaderLocation {
 
       LocationConfig lc = settings.getSpatialConfig().getLocation();
 
-      // set up filtering and aging on the tgs
+      // set up filtering and aging on the tags
       lc.setComputeWindowSeconds((short) 10);
       lc.setTagAgeIntervalSeconds((short) 20);
 
       // set up how often we want to get update reports
-      lc.setUpdateIntervalSeconds((short) 5);
+      lc.setUpdateIntervalSeconds((short) 1);
 
       // disable antennas targeting areas from which we may not want
       // location reports,
@@ -97,11 +97,91 @@ public class SpatialReaderLocation {
   }
 
   public static class LocationReportListenerImplementation implements LocationReportListener {
+    // useful for filling Points
+    Coordinates tempcoordinates;
+    // 5 present_points
+    ArrayList<Coordinates> Points = new ArrayList<>();
+    // when we go to the next coordinates
+    // we compare it with the last if is near
+    // we consider that the tag didn't move
+    Coordinates last_coordinates = null;
+    Coordinates new_coordinates;
+
+    /*
+     * public void verifier_Treshold(Coordinates newcoordinates, Coordinates
+     * lastcoordinates) {
+     *
+     * double xn = newcoordinates.x; double yn = newcoordinates.y; double xl =
+     * lastcoordinates.x; double yl = lastcoordinates.y; double variation =
+     * Math.sqrt(Math.pow(yl - yn, 2) + Math.pow(xl - xn, 2));
+     *
+     * System.out.println(" variation " + variation); if (variation > 40) {
+     * lastcoordinates = newcoordinates; } }
+     */
 
     @Override
     public void onLocationReported(ImpinjReader reader, LocationReport report) {
-      System.out.println("Location: " + " epc: " + report.getEpc().toHexString() + " x: " + report.getLocationXCm()
-          + " y: " + report.getLocationYCm() + " read_count: " + report.getConfidenceFactors().getReadCount());
+
+      // we use updae_Coordinates to sum all coordiantes in one and then devide
+      // by 5
+      // in order to calculate the mean coordinates which represents the new
+      // coordinates
+      // while (true) {
+      int i = 0;
+      tempcoordinates = null;
+      if (last_coordinates == null) {
+
+      }
+      while (i < 5) {
+        try {
+          Thread.sleep(1100);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        i++;
+        float xtemp = report.getLocationXCm();
+        float ytemp = report.getLocationYCm();
+        if (tempcoordinates == null) {
+          tempcoordinates = new Coordinates(xtemp, ytemp);
+
+        } else {
+          tempcoordinates.updae_Coordinates(tempcoordinates.x + xtemp, tempcoordinates.y + ytemp);
+
+        }
+      }
+      tempcoordinates.updae_Coordinates(tempcoordinates.x / 5.0f, tempcoordinates.y / 5.0f);
+      float xnew = tempcoordinates.x;
+      float ynew = tempcoordinates.y;
+
+      System.out.println(" fraichement cuites " + xnew + "  " + ynew);
+
+      new_coordinates = new Coordinates(xnew, ynew);
+      // update last_coordiantes if
+      // changes position
+
+      if (last_coordinates == null) {
+        last_coordinates = new_coordinates;
+      } else {
+
+        double xn = new_coordinates.x;
+        double yn = new_coordinates.y;
+        double xl = last_coordinates.x;
+        double yl = last_coordinates.y;
+        double variation = Math.sqrt(Math.pow(yl - yn, 2) + Math.pow(xl - xn, 2));
+
+        if (variation > 40) {
+          last_coordinates = new_coordinates;
+        }
+        // verifier_Treshold(new_coordinates, last_coordinates);
+      }
+
+      System.out.println("Location: " + " epc: " + " x: " + last_coordinates.x + " y: " + last_coordinates.y);
     }
+    /*
+     * System.out.println("Location: " + " epc: " +
+     * report.getEpc().toHexString() + " x: " + report.getLocationXCm() + " y: "
+     * + report.getLocationYCm() + " read_count: " +
+     * report.getConfidenceFactors().getReadCount());
+     */
   }
 }
